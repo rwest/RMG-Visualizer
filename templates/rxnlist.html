@@ -1,0 +1,39 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="en">
+<head>
+    <title>{{ title }}</title>
+	<link rel="stylesheet" type="text/css" href="templates/stylesheet.css" media="all">
+</head>
+<body>
+	<h1>{{ title }}</h1>
+	<h2>{{ reactionList|length }} reactions</h2>
+
+<table class="reactionList">
+{% for reaction in reactionList %}
+ <tr class="reactionRow">
+	<td class="reactionNumber"> {{ reaction._num }} </td>
+  <td class="reactionSide">
+   {% for species in reaction._r %}
+    {% if reaction._r[species]!=1 %}
+     {{ reaction._r[species] }}
+    {% endif %}
+    <img src="pics/{{ species }}.png" class="speciesPic" >
+    {% if not loop.last %} + {% endif %}
+   {% endfor %}
+  </td>
+  <td>=</td>
+  <td class="reactionSide">
+   {% for species in reaction._p %}
+    {% if reaction._p[species]!=1 %}
+     {{ reaction._p[species] }}
+    {% endif %}
+    <img src="pics/{{ species }}.png" class="speciesPic" >
+    {% if not loop.last %} + {% endif %}
+   {% endfor %}
+  </td>
+ </tr>
+{% endfor %}
+</table>
+
+</body>
+</html>

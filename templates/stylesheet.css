@@ -1,0 +1,57 @@
+body {
+background-color: #ffffff;
+color: #111;
+font-size: 12px;
+font-family: Verdana, Arial, SunSans-Regular, Sans-Serif;
+}
+
+table.reactionList {
+	border-collapse: collapse;
+	font-size: 16px;
+}
+
+
+tr.reactionRow td{
+	border-bottom:1px solid #111;
+}
+
+.residuals {
+	font-size: 10px;
+	float:left;
+}
+
+table.groupList {
+	clear:both;
+	font-size: 10px;
+	border: 1px solid #111;
+	width: 100%;
+}
+tr.groupRow td {
+	border-bottom-width: 0px;
+}
+
+tr.unmatchedAtomsRow td {
+	border-bottom-width: 0px;
+}
+
+table.multimatchedAtomsList {
+	font-size: 10px;
+	border: 1px solid #111;
+	width: 100%;
+	background: #fb8;
+}
+
+tr.multimatchedAtomsRow td {
+	border-bottom: 1px solid #111;
+}
+
+img.speciesPic {
+	vertical-align: middle;
+}
+td.speciesPic {
+	text-align: center;
+}
+td.reactionSide{
+	vertical-align: middle;
+	text-align: center;
+}
