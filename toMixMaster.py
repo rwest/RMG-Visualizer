@@ -14,17 +14,14 @@ import os, sys, shutil
 #from scipy import *
 #from scipy.optimize import leastsq
 
-#RMGworkingDir="/Users/rwest/XCodeProjects/RMG/ExampleWorkFolder/"
-RMGworkingDir="/Volumes/Rainier/RMG3/WorkingFolders/dieselWithOOH/"
-#RMGworkingDir="/Users/rwest/XCodeProjects/RMG2-sounceforge/WorkingDirectory"
-#RMGworkingDir="/Users/rwest/XCodeProjects/RMG/WorkingFolders/v3_from_CVS/diesel_surrogate_.5mod"
-
-RMGworkingDir="/Users/rwest/Documents/AcaPostdoc/ENI/from Amrit/diesel surrogate runs/GP tol=0.1 time=4hrs"
+# Get folder with RMG results in
+from RMG_results_path import RMGworkingDir
 
 # convert the chemkin file from RMG into a cantera file chem.cti
 from Cantera import ck2cti
 infile='chem.inp'
-oldpath=os.path.join(RMGworkingDir,'chemkin',infile)
+#oldpath=os.path.join(RMGworkingDir,'chemkin',infile)
+oldpath=os.path.join(RMGworkingDir,infile)
 newpath=os.path.join(os.getcwd(),infile)
 print "copying %s to %s"%(oldpath,newpath)
 shutil.copy2(oldpath, newpath) # copy it to the current folder

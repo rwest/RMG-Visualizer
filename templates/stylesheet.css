@@ -47,6 +47,7 @@ tr.multimatchedAtomsRow td {
 
 img.speciesPic {
 	vertical-align: middle;
+	max-width: 130px;
 }
 td.speciesPic {
 	text-align: center;

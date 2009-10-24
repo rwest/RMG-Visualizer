@@ -22,6 +22,9 @@ import openbabel, pybel
 # doi:10.1186/1752-153X-2-5
 
 
+# Get folder with RMG results in
+from RMG_results_path import RMGworkingDir
+
 
 picfolder='pics'
 molfolder='mols'
@@ -34,11 +37,7 @@ periodicTableBySymbol=dict([(val, key) for key, val in periodicTableByNumber.ite
 
 OBMolBondTypes={'S':1, 'D':2, 'T':3, 'B':5 }
 
-RMGworkingDir="/Users/rwest/XCodeProjects/RMG/ExampleWorkFolder/"
-RMGworkingDir="/Volumes/Rainier/RMG3/WorkingFolders/dieselWithOOH/"
-#RMGworkingDir="/Users/rwest/XCodeProjects/RMG2-sounceforge/WorkingDirectory"
-#RMGworkingDir="/Users/rwest/XCodeProjects/RMG/WorkingFolders/v3_from_CVS/diesel_surrogate_.5mod"
-RMGworkingDir="/Users/rwest/Documents/AcaPostdoc/ENI/from Amrit/diesel surrogate runs/GP tol=0.1 time=4hrs"
+
 
 # copy the RMG dictionary file
 infile='RMG_Dictionary.txt'
