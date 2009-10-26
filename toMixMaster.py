@@ -20,8 +20,8 @@ from RMG_results_path import RMGworkingDir
 # convert the chemkin file from RMG into a cantera file chem.cti
 from Cantera import ck2cti
 infile='chem.inp'
-#oldpath=os.path.join(RMGworkingDir,'chemkin',infile)
-oldpath=os.path.join(RMGworkingDir,infile)
+oldpath=os.path.join(RMGworkingDir,'chemkin',infile)
+#oldpath=os.path.join(RMGworkingDir,infile)
 newpath=os.path.join(os.getcwd(),infile)
 print "copying %s to %s"%(oldpath,newpath)
 shutil.copy2(oldpath, newpath) # copy it to the current folder

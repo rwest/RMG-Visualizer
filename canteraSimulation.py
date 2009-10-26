@@ -1,6 +1,7 @@
 # this version updated by RHW in May 2008
 """
 Batch reactor
+with peroxide!
 
         +------------------------+
         |                        |
@@ -18,9 +19,9 @@ saveCSVever=False  # whether to save the [T,P,massfractions] profiles as CSV fil
 saveCSV=3 # saveCSV is False or an integer saying how many steps to do between saves (1=save every step)
 
 if True:
-    ctifile='chem' # the .cti extension is added later
-    clearfigs=True
-    format='-'
+	ctifile='chem' # the .cti extension is added later
+	clearfigs=True
+	format='-'
 
 
 molefracPeroxide=1e-6
