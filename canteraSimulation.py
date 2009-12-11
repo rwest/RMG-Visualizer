@@ -58,7 +58,7 @@ reset()  # reset Cantera (clear all cached data)
 
 
 
-for molefracPeroxide in [10**i for i in range(-9,-1)]:
+for molefracPeroxide in [1]:# [10**i for i in range(-9,-1)]:
 	# create a gas object
 	gas = importPhase(ctifile+'.cti', 'chem')
 	
@@ -66,7 +66,7 @@ for molefracPeroxide in [10**i for i in range(-9,-1)]:
 	assert io2==0, 'Was expecting O2(1) to be first species'
 	maxtime=4*hours # seconds
 	
-	iPeroxide=gas.speciesIndex('peroxydcbz(9)')
+#	iPeroxide=gas.speciesIndex('peroxydcbz(9)')
 	
 	fuelmassfracs="n-undecane(2):0.05, n-tridecane(3):0.19, SPC(4):0.11, n-hexadecane(5):0.25, SPC(6):0.12, n-nonadecane(7):0.18, n-heneicosane(8):0.10"
 	gas.set(Y=fuelmassfracs)
@@ -110,8 +110,8 @@ for molefracPeroxide in [10**i for i in range(-9,-1)]:
 	
 	
 	
-	setOneMoleFrac(gas,iPeroxide,molefracPeroxide)
-#	print "initial mole fraction of Peroxide:",molefracPeroxide
+	#setOneMoleFrac(gas,iPeroxide,molefracPeroxide)
+	#print "initial mole fraction of Peroxide:",molefracPeroxide
 	
 	# create a reactor
 	reactor = Reactor(gas, volume = 1.0)
