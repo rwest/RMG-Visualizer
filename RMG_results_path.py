@@ -5,3 +5,11 @@ RMGworkingDir="/Volumes/Rainier/RMG3/WorkingFolders/dieselWithOOH/"
 RMGworkingDir="/Users/rwest/XCodeProjects/RMG/ExampleWorkFolder/"
 
 RMGworkingDir = "/Users/rwest/Documents/AcademicPostdoc/ENI/from Amrit/Ester Simulations/Ester Simulation results/Conversion=0.5/Methyl linoleate"
+
+RMGworkingDir = "/Users/rwest/XCodeProjects/RMG2-sounceforge/WorkingDirectory-octane-RMG"
+
+#RMGworkingDir = "/Users/rwest/XCodeProjects/RMG/ExampleWorkFolder"
+
+RMGworkingDir = "/Users/rwest/Documents/AcademicPostdoc/ENI/from Amrit/diesel surrogate runs/SP tol=0.1 time=4hrs"
+
+#RMGworkingDir = "/Users/rwest/XCodeProjects/RMG/ExampleWorkFolder"
