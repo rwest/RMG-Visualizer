@@ -48,7 +48,7 @@ shutil.copy2(oldpath, newpath) # copy it to the current folder
 
 # load file
 RMGfile=file(newpath)
-
+masses=file('MolarMasses.txt','w')
 
 for i in range(1,30000):
     print 'Molecule', i,'\t',
@@ -106,4 +106,7 @@ for i in range(1,30000):
         pymol.removeh()
     pymol.draw(filename=os.path.join('pics',name+'.png'), update=True, show=False)
     pymol.write(format='mol',filename=os.path.join('mols',name+'.mol'),overwrite=True)
-        
+       
+    masses.write(name+'\t'+str(pymol.exactmass)+'\n')
+masses.close()
+RMGfile.close()

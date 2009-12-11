@@ -34,14 +34,31 @@ ck2cti.ck2cti(infile = infile, thermodb = thermodb,  trandb = trandb, idtag = nm
 
 # convert the Final_Model.txt into approprita CSV file
 
-print "NB  ForMixMaster.csv is wrong. MixMaster wants MASS fractions and we are giving it MOLE fractions" 
+#print "NB  ForMixMaster.csv is wrong. MixMaster wants MASS fractions and we are giving it MOLE fractions" 
+print "ForMixMaster.csv now contains mass fractions, as required by MixMaster"
+
+massesfilename='MolarMasses.txt'
+print "Reading molar masses from",massesfilename
+massesfile=file(massesfilename)
+massesdict=dict()
+for line in massesfile:
+    (species,mass)=line.split()
+    massesdict[species]=mass
+massesfile.close()
+
 
 temperature=273+150
 pressure=208*101325
 print " using these settings:\n Temperature: %f K \t Pressure: %f Pa\n"%(temperature,pressure)
 
 # load file
-resultFile=file(os.path.join(RMGworkingDir,'Final_Model.txt'))
+resultFile='Final_Model.txt'
+oldpath=os.path.join(RMGworkingDir,resultFile)
+newpath=os.path.join(os.getcwd(),resultFile)
+print "copying %s to %s"%(oldpath,newpath)
+shutil.copy2(oldpath, newpath) # copy it to the current folder
+resultFile=file(newpath)
+
 # search for "Mole Fraction Profile Output"
 line=resultFile.next()
 while (line.find('Mole Fraction Profile Output')<0):
@@ -50,10 +67,29 @@ while (line.find('Mole Fraction Profile Output')<0):
 titles=resultFile.next()
 print "Species:",titles
 output=titles.strip()+"\tT\tP\tnothing\n"
+items=titles.split()
+assert items[0]=='Time'
+speciesnames=items[1:]
+masses=list()
+for species in speciesnames:
+    masses.append(float(massesdict[species]))
+	
 # add the temperature IN KELVIN and pressure IN PASCAL to all the following nonblank lines
 line=resultFile.next()
 while (line.strip()):
-    output += line.strip() + "\t%f\t%f\t0\n"%(temperature,pressure)
+    massfractions=[]
+    massfractionsum = 0
+    items = line.split()
+    time = items[0]
+    molefracs = items[1:]
+    for i,molefrac in enumerate(molefracs):
+        massfrac = float(molefrac)*masses[i]
+        massfractions.append(massfrac)
+        massfractionsum += massfrac
+    massfractions = [str(m/massfractionsum) for m in massfractions]
+    output += str(time)+'\t'
+    output += '\t'.join(massfractions)
+    output +=  "\t%f\t%f\t0\n"%(temperature,pressure)
     line=resultFile.next()
 # turn whitespaces into commas
 # save the output
@@ -80,12 +116,12 @@ ctml_writer._valfmt = ''
 
 execfile('chem.cti')
 
-for rxn in ctml_writer._reactions:
-	for side in [rxn._r,rxn._p]:
-		for sp in side:
-			num=side[sp]
-			if num!=1: print num,
-			print sp
+#for rxn in ctml_writer._reactions:
+#	for side in [rxn._r,rxn._p]:
+#		for sp in side:
+#			num=side[sp]
+#			if num!=1: print num,
+#			print sp
 		
 import jinja2
 env = jinja2.Environment(loader = jinja2.FileSystemLoader('templates'))
@@ -95,7 +131,7 @@ outfile=file('ReactionList'+'.html','w')
 outfile.write(outstring)
 outfile.close()
 
-print outstring
+#print outstring
 
 
 # load mixmaster
