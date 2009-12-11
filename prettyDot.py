@@ -29,7 +29,7 @@ for line in infile:
 	# rankdir="LR" to make graph go left>right instead of top>bottom
 
 	if StripLineLabels:
-		line=re.sub('label=\"\s*[\d.]+\"','label=""',line)
+		line=re.sub('label\s*=\s*\"\s*[\d.]+\"','label=""',line)
 		
 	# change colours
 	line=re.sub('color="0.7,\ (.*?),\ 0.9"',r'color="1.0, \1, 0.7*\1"',line)
@@ -39,4 +39,4 @@ for line in infile:
 outfile.close()
 infile.close()
         
-print "now try:\n dot -O -Tsvg rxnpath2.dot"
+print "now try:\n dot -O -Tpdf rxnpath2.dot"
