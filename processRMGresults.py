@@ -8,7 +8,7 @@ def drawMolecules(RMG_results):
     """Draw pictures of each of the molecules in the RMG dictionary.
     
     Also creates MolarMasses.txt. Puts its results inside RMG_results directory"""
-    
+    import re
     import openbabel, pybel
     # please cite:
     # Pybel: a Python wrapper for the OpenBabel cheminformatics toolkit
@@ -19,7 +19,7 @@ def drawMolecules(RMG_results):
     picfolder=os.path.join(RMG_results,'pics')
     molfolder=os.path.join(RMG_results,'mols')
     for path in [picfolder,molfolder]:
-        os.path.isdir(path) or os.mkdirs(path)
+        os.path.isdir(path) or os.makedirs(path)
     
     periodicTableByNumber={ 1: 'H',  2: 'He',  3: 'Li',  4: 'Be',  5: 'B',  6: 'C',  7: 'N',  8: 'O',  9: 'F',  10: 'Ne',  11: 'Na',  12: 'Mg',  13: 'Al',  14: 'Si',  15: 'P',  16: 'S',  17: 'Cl',  18: 'Ar',  19: 'K',  20: 'Ca',  21: 'Sc',  22: 'Ti',  23: 'V',  24: 'Cr',  25: 'Mn',  26: 'Fe',  27: 'Co',  28: 'Ni',  29: 'Cu',  30: 'Zn',  31: 'Ga',  32: 'Ge',  33: 'As',  34: 'Se',  35: 'Br',  36: 'Kr',  37: 'Rb',  38: 'Sr',  39: 'Y',  40: 'Zr',  41: 'Nb',  42: 'Mo',  43: 'Tc',  44: 'Ru',  45: 'Rh',  46: 'Pd',  47: 'Ag',  48: 'Cd',  49: 'In',  50: 'Sn',  51: 'Sb',  52: 'Te',  53: 'I',  54: 'Xe',  55: 'Cs',  56: 'Ba',  57: 'La',  58: 'Ce',  59: 'Pr',  60: 'Nd',  61: 'Pm',  62: 'Sm',  63: 'Eu',  64: 'Gd',  65: 'Tb',  66: 'Dy',  67: 'Ho',  68: 'Er',  69: 'Tm',  70: 'Yb',  71: 'Lu',  72: 'Hf',  73: 'Ta',  74: 'W',  75: 'Re',  76: 'Os',  77: 'Ir',  78: 'Pt',  79: 'Au',  80: 'Hg',  81: 'Tl',  82: 'Pb',  83: 'Bi',  84: 'Po',  85: 'At',  86: 'Rn',  87: 'Fr',  88: 'Ra',  89: 'Ac',  90: 'Th',  91: 'Pa',  92: 'U',  93: 'Np',  94: 'Pu',  95: 'Am',  96: 'Cm',  97: 'Bk',  98: 'Cf',  99: 'Es',  100: 'Fm',  101: 'Md',  102: 'No',  103: 'Lr',  104: 'Rf',  105: 'Db',  106: 'Sg',  107: 'Bh',  108: 'Hs',  109: 'Mt',  110: 'Ds',  111: 'Rg',  112: 'Uub',  113: 'Uut',  114: 'Uuq',  115: 'Uup',  116: 'Uuh',  117: 'Uus',  118: 'Uuo'}
     periodicTableBySymbol=dict([(val, key) for key, val in periodicTableByNumber.items()])   
@@ -93,9 +93,9 @@ def convertChemkin2Cantera(RMG_results):
     Does its work inside RMG_results/chemkin"""
     
     from Cantera import ck2cti
-    starting_dir = os.path.getcwd()
+    starting_dir = os.getcwd()
     chemkin_dir = os.path.join(RMG_results,'chemkin')
-    os.path.chdir(chemkin_dir)
+    os.chdir(chemkin_dir)
     try:
         infile='chem.inp'
         thermodb=''
@@ -103,7 +103,7 @@ def convertChemkin2Cantera(RMG_results):
         nm='chem'
         ck2cti.ck2cti(infile = infile, thermodb = thermodb,  trandb = trandb, idtag = nm, debug=0, validate=1)
     finally:
-        os.path.chdir(starting_dir)
+        os.chdir(starting_dir)
 
 def convertFinalModel2MixMaster(RMG_results):
     """Convert the Final_Model.txt into appropriate CSV data file for mixmaster.
@@ -172,8 +172,11 @@ def makeTableOfSpecies(RMG_results):
     """Make a pretty table of species"""
     ### make pretty table of species
     import ctml_writer
-    from ctml_writer import *
-    # these lists store top-level entries. Empty them!
+    from ctml_writer import * 
+    # if you're not allowed to import * then you'll need at least these:
+    # units, ideal_gas, state, OneAtm, species, NASA, reaction
+    
+    # these lists store top-level entries. Empty them:
     ctml_writer._elements = []
     ctml_writer._species = []
     ctml_writer._speciesnames = []
@@ -186,13 +189,119 @@ def makeTableOfSpecies(RMG_results):
     ctml_writer._valexport = ''
     ctml_writer._valfmt = ''
     
-    execfile('chem.cti')
-    
     import jinja2
-    env = jinja2.Environment(loader = jinja2.FileSystemLoader('templates'))
-    template = env.get_template('rxnlist.html')
-    outstring=template.render(title=infile, reactionList=ctml_writer._reactions)
-    outfile=file('ReactionList'+'.html','w')
+    #env = jinja2.Environment(loader = jinja2.FileSystemLoader('templates'))
+    #template = env.get_template('rxnlist.html')
+    template = jinja2.Template("""
+    <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+    <html lang="en">
+    <head>
+        <title>{{ title }}</title>
+    <style>
+    body {
+    background-color: #ffffff;
+    color: #111;
+    font-size: 12px;
+    font-family: Verdana, Arial, SunSans-Regular, Sans-Serif;
+    }
+    
+    table.reactionList {
+    	border-collapse: collapse;
+    	font-size: 16px;
+    }
+    
+    
+    tr.reactionRow td{
+    	border-bottom:1px solid #111;
+    }
+    
+    .residuals {
+    	font-size: 10px;
+    	float:left;
+    }
+    
+    table.groupList {
+    	clear:both;
+    	font-size: 10px;
+    	border: 1px solid #111;
+    	width: 100%;
+    }
+    tr.groupRow td {
+    	border-bottom-width: 0px;
+    }
+    
+    tr.unmatchedAtomsRow td {
+    	border-bottom-width: 0px;
+    }
+    
+    table.multimatchedAtomsList {
+    	font-size: 10px;
+    	border: 1px solid #111;
+    	width: 100%;
+    	background: #fb8;
+    }
+    
+    tr.multimatchedAtomsRow td {
+    	border-bottom: 1px solid #111;
+    }
+    
+    img.speciesPic {
+    	vertical-align: middle;
+    	max-width: 150px;
+    	max-height: 150px;
+    }
+    td.speciesPic {
+    	text-align: center;
+    }
+    td.reactionSide{
+    	vertical-align: middle;
+    	text-align: center;
+    }
+    </style>
+    </head>
+    <body>
+    	<h1>{{ title }}</h1>
+    	<h2>{{ reactionList|length }} reactions</h2>
+    
+    <table class="reactionList">
+    {% for reaction in reactionList %}
+     <tr class="reactionRow">
+    	<td class="reactionNumber"> {{ reaction._num }} </td>
+      <td class="reactionSide">
+       {% for species in reaction._r %}
+        {% if reaction._r[species]!=1 %}
+         {{ reaction._r[species] }}
+        {% endif %}
+        <img src="pics/{{ species }}.png" class="speciesPic" >
+        {% if not loop.last %} + {% endif %}
+       {% endfor %}
+      </td>
+      <td>=</td>
+      <td class="reactionSide">
+       {% for species in reaction._p %}
+        {% if reaction._p[species]!=1 %}
+         {{ reaction._p[species] }}
+        {% endif %}
+        <img src="pics/{{ species }}.png" class="speciesPic" >
+        {% if not loop.last %} + {% endif %}
+       {% endfor %}
+      </td>
+     </tr>
+    {% endfor %}
+    </table>
+    
+    </body>
+    </html>
+    """)
+    
+    filename='chem.cti'
+    filepath = os.path.join(RMG_results,'chemkin',filename)
+    execfile(filepath)
+    outfilepath = os.path.join(RMG_results,'ReactionList.html')
+    
+    title  = "%s (%s)"%(filename,ctml_writer._phases[0]._name)
+    outstring=template.render(title=title, reactionList=ctml_writer._reactions)
+    outfile=file(outfilepath,'w')
     outfile.write(outstring)
     outfile.close()
 
