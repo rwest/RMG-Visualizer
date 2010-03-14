@@ -1,4 +1,4 @@
-# this version updated by RHW in January 2009
+# this version updated by RHW in March 2010
 """
 Postprocess a load of RMG Results
 """
