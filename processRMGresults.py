@@ -18,8 +18,15 @@ def drawMolecules(RMG_results):
     
     picfolder=os.path.join(RMG_results,'pics')
     molfolder=os.path.join(RMG_results,'mols')
+    
     for path in [picfolder,molfolder]:
-        os.path.isdir(path) or os.makedirs(path)
+        if os.path.isdir(path):
+            print "Removing old contents of '%s'"%path
+            for f in os.listdir(path):
+                os.remove(os.path.join(path,f))
+        else:
+            os.makedirs(path)
+    print "Making .mol files in '%s' and pictures in '%s'"%(molfolder,picfolder)
     
     periodicTableByNumber={ 1: 'H',  2: 'He',  3: 'Li',  4: 'Be',  5: 'B',  6: 'C',  7: 'N',  8: 'O',  9: 'F',  10: 'Ne',  11: 'Na',  12: 'Mg',  13: 'Al',  14: 'Si',  15: 'P',  16: 'S',  17: 'Cl',  18: 'Ar',  19: 'K',  20: 'Ca',  21: 'Sc',  22: 'Ti',  23: 'V',  24: 'Cr',  25: 'Mn',  26: 'Fe',  27: 'Co',  28: 'Ni',  29: 'Cu',  30: 'Zn',  31: 'Ga',  32: 'Ge',  33: 'As',  34: 'Se',  35: 'Br',  36: 'Kr',  37: 'Rb',  38: 'Sr',  39: 'Y',  40: 'Zr',  41: 'Nb',  42: 'Mo',  43: 'Tc',  44: 'Ru',  45: 'Rh',  46: 'Pd',  47: 'Ag',  48: 'Cd',  49: 'In',  50: 'Sn',  51: 'Sb',  52: 'Te',  53: 'I',  54: 'Xe',  55: 'Cs',  56: 'Ba',  57: 'La',  58: 'Ce',  59: 'Pr',  60: 'Nd',  61: 'Pm',  62: 'Sm',  63: 'Eu',  64: 'Gd',  65: 'Tb',  66: 'Dy',  67: 'Ho',  68: 'Er',  69: 'Tm',  70: 'Yb',  71: 'Lu',  72: 'Hf',  73: 'Ta',  74: 'W',  75: 'Re',  76: 'Os',  77: 'Ir',  78: 'Pt',  79: 'Au',  80: 'Hg',  81: 'Tl',  82: 'Pb',  83: 'Bi',  84: 'Po',  85: 'At',  86: 'Rn',  87: 'Fr',  88: 'Ra',  89: 'Ac',  90: 'Th',  91: 'Pa',  92: 'U',  93: 'Np',  94: 'Pu',  95: 'Am',  96: 'Cm',  97: 'Bk',  98: 'Cf',  99: 'Es',  100: 'Fm',  101: 'Md',  102: 'No',  103: 'Lr',  104: 'Rf',  105: 'Db',  106: 'Sg',  107: 'Bh',  108: 'Hs',  109: 'Mt',  110: 'Ds',  111: 'Rg',  112: 'Uub',  113: 'Uut',  114: 'Uuq',  115: 'Uup',  116: 'Uuh',  117: 'Uus',  118: 'Uuo'}
     periodicTableBySymbol=dict([(val, key) for key, val in periodicTableByNumber.items()])   
@@ -88,16 +95,22 @@ def drawMolecules(RMG_results):
     RMGfile.close()
 
 def convertChemkin2Cantera(RMG_results):
-    """Convert the Chemkin file into a Cantera file.
+    """
+    Convert the Chemkin file into a Cantera file.
     
-    Does its work inside RMG_results/chemkin"""
+    Does its work inside RMG_results/chemkin
+    """
     
     from Cantera import ck2cti
     starting_dir = os.getcwd()
     chemkin_dir = os.path.join(RMG_results,'chemkin')
+    infile='chem.inp'
+    
+    print "Converting chemkin file '%s' into cantera file '%s' in folder '%s/'"%(infile,
+        os.path.splitext('chem.inp')[0]+'.cti', chemkin_dir)
+    
     os.chdir(chemkin_dir)
     try:
-        infile='chem.inp'
         thermodb=''
         trandb=''
         nm='chem'
@@ -108,7 +121,25 @@ def convertChemkin2Cantera(RMG_results):
 def convertFinalModel2MixMaster(RMG_results):
     """Convert the Final_Model.txt into appropriate CSV data file for mixmaster.
     
-    Needs a MolarMasses.txt file, which is created in another function"""
+    Needs a MolarMasses.txt file, which is created in another function.
+    Returns True if it suceeds, False if it fails."""
+    
+    # load file
+    filename ='Final_Model.txt'
+    filepath = os.path.join(RMG_results,filename)
+    outputfilepath = os.path.join(RMG_results,'ForMixMaster.csv')
+    
+    print "Converting mole fractions profile from '%s' into mass fractions profile in '%s'"%(filename, outputfilepath)
+    
+    try:
+        resultFile=file(filepath)
+    except IOError:
+        print "Couldn't open '%s'."%filepath
+        print "Will therefore not create mass fractions profile in '%s'"%outputfilepath
+        if os.path.exists(outputfilepath): 
+            print "In fact, I'm going to delete the old one for you, as it's out of date."
+            os.remove(outputfilepath)
+        return False
     
     massesfilename=os.path.join(RMG_results,'MolarMasses.txt')
     print "Reading molar masses from",massesfilename
@@ -122,11 +153,6 @@ def convertFinalModel2MixMaster(RMG_results):
     temperature=273+150
     pressure=208*101325
     print "Using these settings:\n Temperature: %f K \t Pressure: %f Pa\n"%(temperature,pressure)
-    
-    # load file
-    filename ='Final_Model.txt'
-    filepath = os.path.join(RMG_results,filename)
-    resultFile=file(filepath)
     
     # search for "Mole Fraction Profile Output"
     line=resultFile.next()
@@ -162,15 +188,22 @@ def convertFinalModel2MixMaster(RMG_results):
         line=resultFile.next()
     # turn whitespaces into commas
     # save the output
-    outputFile=file(os.path.join(RMG_results,'ForMixMaster.csv'),'w')
+    outputFile=file(outputfilepath,'w')
     outputFile.write(output.replace('\t',','))
     outputFile.close()
     print "ForMixMaster.csv now contains mass fractions, as required by MixMaster"
+    return True
     
 
 def makeTableOfSpecies(RMG_results):
     """Make a pretty table of species"""
-    ### make pretty table of species
+    
+    filename='chem.cti'
+    filepath = os.path.join(RMG_results,'chemkin',filename)
+    outfilepath = os.path.join(RMG_results,'ReactionList.html')
+    
+    print "Making a table of species in %s"%outfilepath
+    
     import ctml_writer
     from ctml_writer import * 
     # if you're not allowed to import * then you'll need at least these:
@@ -260,18 +293,16 @@ def makeTableOfSpecies(RMG_results):
     </style>
     </head>
     <body>
-    	<h1>{{ title }}</h1>
-    	<h2>{{ reactionList|length }} reactions</h2>
+    <h1>{{ title }}</h1>
+    <h2>{{ reactionList|length }} reactions</h2>
     
     <table class="reactionList">
     {% for reaction in reactionList %}
      <tr class="reactionRow">
-    	<td class="reactionNumber"> {{ reaction._num }} </td>
+     <td class="reactionNumber"> {{ reaction._num }} </td>
       <td class="reactionSide">
        {% for species in reaction._r %}
-        {% if reaction._r[species]!=1 %}
-         {{ reaction._r[species] }}
-        {% endif %}
+        {% if reaction._r[species]!=1 %}{{ reaction._r[species] }}{% endif %}
         <img src="pics/{{ species }}.png" class="speciesPic" >
         {% if not loop.last %} + {% endif %}
        {% endfor %}
@@ -279,9 +310,7 @@ def makeTableOfSpecies(RMG_results):
       <td>=</td>
       <td class="reactionSide">
        {% for species in reaction._p %}
-        {% if reaction._p[species]!=1 %}
-         {{ reaction._p[species] }}
-        {% endif %}
+        {% if reaction._p[species]!=1 %}{{ reaction._p[species] }}{% endif %}
         <img src="pics/{{ species }}.png" class="speciesPic" >
         {% if not loop.last %} + {% endif %}
        {% endfor %}
@@ -293,11 +322,8 @@ def makeTableOfSpecies(RMG_results):
     </body>
     </html>
     """)
-    
-    filename='chem.cti'
-    filepath = os.path.join(RMG_results,'chemkin',filename)
+
     execfile(filepath)
-    outfilepath = os.path.join(RMG_results,'ReactionList.html')
     
     title  = "%s (%s)"%(filename,ctml_writer._phases[0]._name)
     outstring=template.render(title=title, reactionList=ctml_writer._reactions)
