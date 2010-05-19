@@ -1,1 +1,9 @@
 *.pyc
+<<<<<<< HEAD
+=======
+.ropeproject
+*~
+TAGS
+#*#
+
+>>>>>>> a13090e... Tidying up.
