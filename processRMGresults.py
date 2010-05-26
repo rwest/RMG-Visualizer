@@ -110,11 +110,17 @@ def convertChemkin2Cantera(RMG_results):
         os.path.splitext('chem.inp')[0]+'.cti', chemkin_dir)
     
     os.chdir(chemkin_dir)
+    if os.path.exists('ck2cti-validation-failed.log'): os.remove('ck2cti-validation-failed.log')
     try:
         thermodb=''
         trandb=''
         nm='chem'
         ck2cti.ck2cti(infile = infile, thermodb = thermodb,  trandb = trandb, idtag = nm, debug=0, validate=1)
+    except:
+        print "Conversion from chemkin to cantera did not validate. Trying again without validation."
+        os.rename('ck2cti.log', 'ck2cti-validation-failed.log')
+        print "Check",os.path.join(chemkin_dir,'ck2cti-validation-failed.log')
+        ck2cti.ck2cti(infile = infile, thermodb = thermodb,  trandb = trandb, idtag = nm, debug=0, validate=0)
     finally:
         os.chdir(starting_dir)
 
