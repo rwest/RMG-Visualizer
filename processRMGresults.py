@@ -339,7 +339,15 @@ def loadMixMaster(RMG_results):
     o.loadmech('','chem.cti')
     
 if __name__ == "__main__":
-    RMG_results = "RMG_results"
+    import optparse
+    usage = "usage: %prog [options] rmg_results_path"
+    parser = optparse.OptionParser(usage)
+    (options, args) = parser.parse_args()
+    if len(args) != 1:
+        RMG_results = "RMG_results"
+    else:
+        RMG_results = args[0]
+        
     print "Taking results from ",os.path.realpath(RMG_results)
     drawMolecules(RMG_results)
     convertChemkin2Cantera(RMG_results)
