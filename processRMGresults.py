@@ -2,7 +2,7 @@
 """
 Postprocess a load of RMG Results
 """
-import os, sys, shutil
+import os, sys, shutil, re
 
 def drawMolecules(RMG_results):
     """Draw pictures of each of the molecules in the RMG dictionary.
@@ -203,8 +203,8 @@ def convertFinalModel2MixMaster(RMG_results):
     return True
     
 
-def makeTableOfSpecies(RMG_results):
-    """Make a pretty table of species"""
+def makeTableOfReactions(RMG_results):
+    """Make a pretty table of reactions"""
     
     filename='chem.cti'
     filepath = os.path.join(RMG_results,'chemkin',filename)
@@ -253,7 +253,7 @@ def makeTableOfSpecies(RMG_results):
     
     
     tr.reactionRow td{
-    	border-bottom:1px solid #111;
+    	border-top:1px solid #111;
     }
     
     .residuals {
@@ -298,6 +298,9 @@ def makeTableOfSpecies(RMG_results):
     	vertical-align: middle;
     	text-align: center;
     }
+    td.reactionComment{
+    	font-size: small;
+    }
     </style>
     </head>
     <body>
@@ -334,6 +337,12 @@ def makeTableOfSpecies(RMG_results):
         {% endif %}
       </td>
      </tr>
+     <tr>
+      <td></td>
+      <td colspan="4" class="reactionComment">
+      {{ reaction.comment }}
+      </td>
+     </tr>
     {% endfor %}
     </table>
     
@@ -342,6 +351,22 @@ def makeTableOfSpecies(RMG_results):
     """)
 
     execfile(filepath)
+    
+    comments=list()
+    next_line_is_reaction = False
+    for line in file(filepath):
+        if not line.startswith('#'): continue
+        if next_line_is_reaction:
+            comments.append(line[2:].strip())
+        if re.match('#  Reaction (\d+)',line):
+            next_line_is_reaction = True
+            reaction_number = line.split()[-1]
+        else: 
+            next_line_is_reaction = False
+    assert len(comments) == len(ctml_writer._reactions)
+    for i,comment in enumerate(comments):
+        ctml_writer._reactions[i].comment = comment
+
     
     title  = "%s (%s)"%(filename,ctml_writer._phases[0]._name)
     outstring=template.render(title=title, reactionList=ctml_writer._reactions)
@@ -370,4 +395,4 @@ if __name__ == "__main__":
     drawMolecules(RMG_results)
     convertChemkin2Cantera(RMG_results)
     convertFinalModel2MixMaster(RMG_results)
-    makeTableOfSpecies(RMG_results)
+    makeTableOfReactions(RMG_results)
