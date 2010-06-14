@@ -1,4 +1,4 @@
-# this version updated by RHW in March 2010
+# this version updated by RHW in June 2010
 """
 Postprocess a load of RMG Results
 """
@@ -48,7 +48,7 @@ def drawMolecules(RMG_results):
         except StopIteration:
             print 'No more molecules'
             break
-        print name
+        print '%-18s'%name ,
         graph=[]
         line=RMGfile.next()
         while line.strip():
@@ -83,7 +83,7 @@ def drawMolecules(RMG_results):
                 else:
                     raise "couldn't figure out this bond: %s"%bond
         pymol=pybel.Molecule(mol)
-        print pymol.write().strip(), 
+        print '%-18s'%pymol.write().strip(), 
         chemkinformula=pymol.formula+'J'*(pymol.spin-1)
         print chemkinformula
         if pymol.OBMol.NumHvyAtoms()>1:
