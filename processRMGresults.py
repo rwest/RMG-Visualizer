@@ -320,7 +320,7 @@ def makeTableOfReactions(RMG_results):
       <td class="reactionSide">
        {% for species in reaction._r %}
         {% if reaction._r[species]!=1 %}{{ reaction._r[species]|int }}{% endif %}
-        <img src="pics/{{ species }}.png" class="speciesPic" >
+        <img src="pics/{{ species }}.png" class="speciesPic" alt="{{ species }}">
         {% if not loop.last %} + {% endif %}
        {% endfor %}
       </td>
@@ -328,7 +328,7 @@ def makeTableOfReactions(RMG_results):
       <td class="reactionSide">
        {% for species in reaction._p %}
         {% if reaction._p[species]!=1 %}{{ reaction._p[species]|int  }}{% endif %}
-        <img src="pics/{{ species }}.png" class="speciesPic" >
+        <img src="pics/{{ species }}.png" class="speciesPic" alt="{{ species }}">
         {% if not loop.last %} + {% endif %}
        {% endfor %}
       </td>
