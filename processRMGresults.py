@@ -387,12 +387,12 @@ if __name__ == "__main__":
     parser = optparse.OptionParser(usage)
     (options, args) = parser.parse_args()
     if len(args) != 1:
-        RMG_results = "RMG_results"
+        print "Please specify an rmg results path"
     else:
         RMG_results = args[0]
         
-    print "Taking results from ",os.path.realpath(RMG_results)
-    drawMolecules(RMG_results)
-    convertChemkin2Cantera(RMG_results)
-    convertFinalModel2MixMaster(RMG_results)
-    makeTableOfReactions(RMG_results)
+        print "Processing results in ",os.path.realpath(RMG_results)
+        drawMolecules(RMG_results)
+        convertChemkin2Cantera(RMG_results)
+        convertFinalModel2MixMaster(RMG_results)
+        makeTableOfReactions(RMG_results)
