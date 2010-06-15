@@ -1,8 +1,14 @@
-# this version updated by RHW in June 2010
+#! /usr/bin/python
+# this version updated by Richard West <rwest@mit.edu> in June 2010
 """
 Postprocess a load of RMG Results
 """
 import os, sys, shutil, re
+
+# use local modified versions of pybel and oasa
+package_path = os.path.join( os.path.split(os.path.realpath(__file__))[0],'python-packages' )
+if os.path.exists(package_path):
+    sys.path.insert(1,package_path) 
 
 def drawMolecules(RMG_results):
     """Draw pictures of each of the molecules in the RMG dictionary.
