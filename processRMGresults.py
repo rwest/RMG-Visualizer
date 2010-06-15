@@ -221,7 +221,8 @@ def makeTableOfReactions(RMG_results):
     import ctml_writer
     #from ctml_writer import * 
     # if you're not allowed to import * then you'll need at least these:
-    from ctml_writer import units, ideal_gas, state, OneAtm, species, NASA, reaction, falloff_reaction
+    from ctml_writer import units, ideal_gas, state, OneAtm, species, NASA, \
+        reaction, falloff_reaction, three_body_reaction, Troe
     
     # these lists store top-level entries. Empty them:
     ctml_writer._elements = []
