@@ -216,12 +216,12 @@ def makeTableOfReactions(RMG_results):
     filepath = os.path.join(RMG_results,'chemkin',filename)
     outfilepath = os.path.join(RMG_results,'ReactionList.html')
     
-    print "Making a table of species in %s"%outfilepath
+    print "Making a table of reactions in %s"%outfilepath
     
     import ctml_writer
-    from ctml_writer import * 
+    #from ctml_writer import * 
     # if you're not allowed to import * then you'll need at least these:
-    # units, ideal_gas, state, OneAtm, species, NASA, reaction
+    from ctml_writer import units, ideal_gas, state, OneAtm, species, NASA, reaction, falloff_reaction
     
     # these lists store top-level entries. Empty them:
     ctml_writer._elements = []
