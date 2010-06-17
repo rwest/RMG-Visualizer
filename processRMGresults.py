@@ -308,15 +308,58 @@ def makeTableOfReactions(RMG_results):
     td.reactionComment{
     	font-size: small;
     }
+    .family_selector{
+        border: 1px solid black;
+        padding: 0.3em;
+        margin: 0.3em;
+        display: block;
+        width: 22%;
+        float: left;
+        background-color: #eee;
+    }
+    .family_selector_hidden{
+        color: gray;
+        border-color: gray;
+        background-color: #fff;
+    }
+    
     </style>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <script type="text/javascript">
+    // JQuery documentation is at http://docs.jquery.com/
+ $(document).ready(function(){
+   //  repeat for all selectors
+   $("#selectors").find("span").each( function(i) {
+       var family = this.id;
+     // doesn't help:  family = family.replace(/[#;&,.+*~':"!^$[\]()=>|\/]/g, "\\\\$&"); // escape the funny characters with \\
+       $("#"+family).toggle(function(){
+         $("."+family).fadeOut('slow');
+         $("#"+family).addClass("family_selector_hidden");
+       },function(){
+         $("."+family).fadeIn('fast');
+         $("#"+family).removeClass("family_selector_hidden");
+       });
+       $("#"+family).addClass("family_selector");
+   } )
+ });
+ 
+    </script>
     </head>
+    
     <body>
     <h1>{{ title }}</h1>
     <h2>{{ reactionList|length }} reactions</h2>
-    
+
+    <div id='selectors'>
+        {% for family in families %}
+        <span id='{{ family|replace(',','') }}'>{{ family }}</span>
+        {% endfor %}
+        <span id='reactionComment'>Comments</span>
+    </div>
+        
     <table class="reactionList">
     {% for reaction in reactionList %}
-     <tr class="reactionRow">
+     <tr class="reactionRow {{ reaction.family|replace(',','') }}">
      <td class="reactionNumber"> {{ reaction._num }} </td>
       <td class="reactionSide">
        {% for species in reaction._r %}
@@ -344,7 +387,7 @@ def makeTableOfReactions(RMG_results):
         {% endif %}
       </td>
      </tr>
-     <tr>
+     <tr class="{{ reaction.family|replace(',','') }}">
       <td></td>
       <td colspan="4" class="reactionComment">
       {{ reaction.comment }}
@@ -371,12 +414,17 @@ def makeTableOfReactions(RMG_results):
         else: 
             next_line_is_reaction = False
     assert len(comments) == len(ctml_writer._reactions)
+    families = set()
     for i,comment in enumerate(comments):
         ctml_writer._reactions[i].comment = comment
+        family = comment.split()[0]
+        ctml_writer._reactions[i].family = family
+        families.add(family)
+        #import pdb; pdb.set_trace()
 
     
     title  = "%s (%s)"%(filename,ctml_writer._phases[0]._name)
-    outstring=template.render(title=title, reactionList=ctml_writer._reactions)
+    outstring=template.render(title=title, reactionList=ctml_writer._reactions, families=families)
     outfile=file(outfilepath,'w')
     outfile.write(outstring)
     outfile.close()
