@@ -13,7 +13,9 @@ if os.path.exists(package_path):
 def drawMolecules(RMG_results):
     """Draw pictures of each of the molecules in the RMG dictionary.
     
-    Also creates MolarMasses.txt. Puts its results inside RMG_results directory"""
+    Also creates MolarMasses.txt. Puts its results inside RMG_results directory.
+    Returns a dictionary of chemkin formulae and a dictionary of smiles strings, indexed by species name.
+    """
     import re
     import openbabel, pybel
     # please cite:
@@ -44,6 +46,9 @@ def drawMolecules(RMG_results):
     RMGfile=file(path)
     
     masses=file(os.path.join(RMG_results,'MolarMasses.txt'),'w')
+    
+    chemkin_formulae = dict()
+    smiless = dict()
     
     for i in range(1,30000): # only does 30,000 [core] molecules
         print 'Molecule', i,'\t',
@@ -89,7 +94,8 @@ def drawMolecules(RMG_results):
                 else:
                     raise "couldn't figure out this bond: %s"%bond
         pymol=pybel.Molecule(mol)
-        print '%-18s'%pymol.write().strip(), 
+        smiles = pymol.write('smi').strip()
+        print '%-18s'%smiles, 
         chemkinformula=pymol.formula+'J'*(pymol.spin-1)
         print chemkinformula
         if pymol.OBMol.NumHvyAtoms()>1:
@@ -99,8 +105,12 @@ def drawMolecules(RMG_results):
         pymol.write(format='mol',filename=os.path.join(molfolder,name+'.mol'),overwrite=True)
         
         masses.write(name+'\t'+str(pymol.exactmass)+'\n')
+
+        chemkin_formulae[name]=chemkinformula
+        smiless[name] = smiles
     masses.close()
     RMGfile.close()
+    return chemkin_formulae, smiless
 
 def convertChemkin2Cantera(RMG_results):
     """
@@ -209,7 +219,7 @@ def convertFinalModel2MixMaster(RMG_results):
     return True
     
 
-def makeTableOfReactions(RMG_results):
+def makeTableOfReactions(RMG_results, chemkin_formulae, smiless ):
     """Make a pretty table of reactions"""
     
     filename='chem.cti'
@@ -256,6 +266,8 @@ def makeTableOfReactions(RMG_results):
     table.reactionList {
     	border-collapse: collapse;
     	font-size: 16px;
+    	clear: both;
+    	width: 100%;
     }
     
     
@@ -322,9 +334,15 @@ def makeTableOfReactions(RMG_results):
         border-color: gray;
         background-color: #fff;
     }
-    
+    .species_formula{
+        color: #bbb;
+        font-size: small;
+        position: relative;
+    }
+
     </style>
-    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.1/jquery.min.js"></script>
+    <script type="text/javascript" src="http://web.mit.edu/rwest/www/jquery-qtip-1.0.0-rc3112605/jquery.qtip-1.0.0-rc3.min.js">/*This version of qtip only works with jquery 1.4.1, not 1.4.2*/</script>
     <script type="text/javascript">
     // JQuery documentation is at http://docs.jquery.com/
  $(document).ready(function(){
@@ -340,7 +358,13 @@ def makeTableOfReactions(RMG_results):
          $("#"+family).removeClass("family_selector_hidden");
        });
        $("#"+family).addClass("family_selector");
-   } )
+   } );
+   
+   {% for species in smiless %}
+   $('img[title={{species}}]').qtip({ position: { corner: { target: 'bottomMiddle', tooltip: 'topMiddle' }},
+      content: {title: '{{species}} ({{chemkin_formulae[species]}})', text:'{{smiless[species]}}', url: 'http://cactus.nci.nih.gov/chemical/structure/{{smiless[species]}}/names'}
+   }){% endfor %}
+   
  });
  
     </script>
@@ -352,9 +376,10 @@ def makeTableOfReactions(RMG_results):
 
     <div id='selectors'>
         {% for family in families %}
-        <span id='{{ family|replace(',','') }}'>{{ family }}</span>
+        <span id='{{ family|replace(',','_')|replace('+','_') }}'>{{ family }}</span>
         {% endfor %}
         <span id='reactionComment'>Comments</span>
+        <span id='species_formula'>Species Formulae</span>
     </div>
         
     <table class="reactionList">
@@ -364,7 +389,8 @@ def makeTableOfReactions(RMG_results):
       <td class="reactionSide">
        {% for species in reaction._r %}
         {% if reaction._r[species]!=1 %}{{ reaction._r[species]|int }}{% endif %}
-        <img src="pics/{{ species }}.png" class="speciesPic" alt="{{ species }}">
+        <img src="pics/{{ species }}.png" class="speciesPic" alt="{{ species }}" title="{{ species }}">
+        <span class="species_formula">{{chemkin_formulae[species]}}</span>
         {% if not loop.last %} + {% endif %}
        {% endfor %}
       </td>
@@ -372,7 +398,8 @@ def makeTableOfReactions(RMG_results):
       <td class="reactionSide">
        {% for species in reaction._p %}
         {% if reaction._p[species]!=1 %}{{ reaction._p[species]|int  }}{% endif %}
-        <img src="pics/{{ species }}.png" class="speciesPic" alt="{{ species }}">
+        <img src="pics/{{ species }}.png" class="speciesPic" alt="{{ species }}" title="{{ species }}">
+        <span class="species_formula">{{chemkin_formulae[species]}}</span>
         {% if not loop.last %} + {% endif %}
        {% endfor %}
       </td>
@@ -424,7 +451,11 @@ def makeTableOfReactions(RMG_results):
 
     
     title  = "%s (%s)"%(filename,ctml_writer._phases[0]._name)
-    outstring=template.render(title=title, reactionList=ctml_writer._reactions, families=families)
+    outstring=template.render(title=title,
+                              reactionList=ctml_writer._reactions,
+                              families=families,
+                              chemkin_formulae=chemkin_formulae,
+                              smiless=smiless)
     outfile=file(outfilepath,'w')
     outfile.write(outstring)
     outfile.close()
@@ -447,7 +478,7 @@ if __name__ == "__main__":
         RMG_results = args[0]
         
         print "Processing results in ",os.path.realpath(RMG_results)
-        drawMolecules(RMG_results)
+        chemkin_formulae, smiless = drawMolecules(RMG_results)
         convertChemkin2Cantera(RMG_results)
+        makeTableOfReactions(RMG_results, chemkin_formulae, smiless)
         convertFinalModel2MixMaster(RMG_results)
-        makeTableOfReactions(RMG_results)
