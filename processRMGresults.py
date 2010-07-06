@@ -100,8 +100,12 @@ def drawMolecules(RMG_results):
         print chemkinformula
         if pymol.OBMol.NumHvyAtoms()>1:
             pymol.removeh()
-        pymol.draw(filename=os.path.join(picfolder,name+'.png'), update=True, show=False)
-        pymol.draw(filename=os.path.join(pdffolder,name+'.pdf'), update=False, show=False)
+        try:
+            pymol.draw(filename=os.path.join(picfolder,name+'.png'), update=True, show=False)
+            pymol.draw(filename=os.path.join(pdffolder,name+'.pdf'), update=False, show=False)
+        except:
+            print "FAILED to draw picture of convert"+name
+            
         pymol.write(format='mol',filename=os.path.join(molfolder,name+'.mol'),overwrite=True)
         
         masses.write(name+'\t'+str(pymol.exactmass)+'\n')
