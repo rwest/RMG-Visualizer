@@ -69,6 +69,7 @@ def drawMolecules(RMG_results):
     
         mol = openbabel.OBMol()
         re_bond=re.compile('\{(?P<atomnum>\d+),(?P<bondtype>[SDTB])\}')
+        atoms_by_rmg_number = dict() # the atom numbers apparently don't have to be 1,2,3.. so we need a dictionary 
         for line in graph:
             #print 'line:',line.strip()
             if len(line.split())>3:
@@ -76,6 +77,7 @@ def drawMolecules(RMG_results):
             else:
                 (number, element, radical )=line.split(None)
             a = mol.NewAtom()
+            atoms_by_rmg_number[int(number)] = a.GetIdx()
             a.SetAtomicNum(periodicTableBySymbol[element])  # 6 for a carbon atom
             if int(radical[0]): # the [0] is so we take the first character of the string, in case it's something like "2T"
                 a.SetSpinMultiplicity(int(radical[0])+1)
@@ -90,7 +92,7 @@ def drawMolecules(RMG_results):
                     if toAtom>fromAtom:
                         continue # because toAtom hasn't been placed yet!
                     # print "%s bond from %d to %d"%(bondType,fromAtom,toAtom)
-                    mol.AddBond(fromAtom,toAtom,OBMolBondTypes[bondType])
+                    mol.AddBond(atoms_by_rmg_number[fromAtom],atoms_by_rmg_number[toAtom],OBMolBondTypes[bondType])
                 else:
                     raise "couldn't figure out this bond: %s"%bond
         pymol=pybel.Molecule(mol)
