@@ -72,10 +72,12 @@ def drawMolecules(RMG_results):
         atoms_by_rmg_number = dict() # the atom numbers apparently don't have to be 1,2,3.. so we need a dictionary 
         for line in graph:
             #print 'line:',line.strip()
+            
             if len(line.split())>3:
                 (number, element, radical, bonds)=line.split(None,3)
             else:
                 (number, element, radical )=line.split(None)
+                bonds = ''
             a = mol.NewAtom()
             atoms_by_rmg_number[int(number)] = a.GetIdx()
             a.SetAtomicNum(periodicTableBySymbol[element])  # 6 for a carbon atom
