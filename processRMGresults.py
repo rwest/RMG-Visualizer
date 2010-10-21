@@ -55,16 +55,16 @@ def drawMolecules(RMG_results):
         name=''
         try:
             while name=='':
-                name=RMGfile.next().strip()
+                name=RMGfile.next().split('//')[0].strip() # remove comments
         except StopIteration:
             print 'No more molecules'
             break
         print '%-18s'%name ,
         graph=[]
-        line=RMGfile.next()
+        line=RMGfile.next().split('//')[0].strip() # remove comments
         while line.strip():
             graph.append(line)
-            line=RMGfile.next()
+            line=RMGfile.next().split('//')[0].strip() # remove comments
         # now have 'name' and 'graph'
     
         mol = openbabel.OBMol()
