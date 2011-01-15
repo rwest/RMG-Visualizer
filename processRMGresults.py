@@ -357,10 +357,10 @@ def makeTableOfReactions(RMG_results, chemkin_formulae, smiless ):
        var family = this.id;
      // doesn't help:  family = family.replace(/[#;&,.+*~':"!^$[\]()=>|\/]/g, "\\\\$&"); // escape the funny characters with \\
        $("#"+family).toggle(function(){
-         $("."+family).fadeOut('slow');
+         $("."+family).hide(); //fadeOut('slow');
          $("#"+family).addClass("family_selector_hidden");
        },function(){
-         $("."+family).fadeIn('fast');
+         $("."+family).show(); //fadeIn('fast');
          $("#"+family).removeClass("family_selector_hidden");
        });
        $("#"+family).addClass("family_selector");
