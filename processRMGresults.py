@@ -347,6 +347,10 @@ def makeTableOfReactions(RMG_results, chemkin_formulae, smiless ):
         font-size: small;
         position: relative;
     }
+    .warning{
+        color: #f11;
+        font-weight: bold;
+    }
 
     </style>
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.1/jquery.min.js"></script>
@@ -357,8 +361,7 @@ def makeTableOfReactions(RMG_results, chemkin_formulae, smiless ):
    //  repeat for all selectors
    $("#selectors").find("span").each( function(i) {
        var family = this.id;
-     // doesn't help:  family = family.replace(/[#;&,.+*~':"!^$[\]()=>|\/]/g, "\\\\$&"); // escape the funny characters with \\
-       $("#"+family).toggle(function(){
+        $("#"+family).toggle(function(){
          $("."+family).hide(); //fadeOut('slow');
          $("#"+family).addClass("family_selector_hidden");
        },function(){
@@ -384,15 +387,16 @@ def makeTableOfReactions(RMG_results, chemkin_formulae, smiless ):
 
     <div id='selectors'>
         {% for family in families %}
-        <span id='{{ family|replace(',','_')|replace('+','_') }}'>{{ family }}</span>
+        <span id='{{ family }}'>{{ family }}</span>
         {% endfor %}
         <span id='reactionComment'>Comments</span>
         <span id='species_formula'>Species Formulae</span>
+        <span id='warningFalse'>Acceptable E<sub>a</sub> values</span>
     </div>
         
     <table class="reactionList">
     {% for reaction in reactionList %}
-     <tr class="reactionRow {{ reaction.family|replace(',','') }}">
+     <tr class="reactionRow {{ reaction.family }} warning{{ reaction.warned }}">
      <td class="reactionNumber"> {{ reaction._num }} </td>
       <td class="reactionSide">
        {% for species in reaction._r %}
@@ -422,7 +426,7 @@ def makeTableOfReactions(RMG_results, chemkin_formulae, smiless ):
         {% endif %}
       </td>
      </tr>
-     <tr class="{{ reaction.family|replace(',','') }}">
+     <tr class="{{ reaction.family }} warning{{ reaction.warned }}">
       <td></td>
       <td colspan="4" class="reactionComment">
       {{ reaction.comment }}
@@ -451,8 +455,9 @@ def makeTableOfReactions(RMG_results, chemkin_formulae, smiless ):
     assert len(comments) == len(ctml_writer._reactions)
     families = set()
     for i,comment in enumerate(comments):
+        comment, family, warned = processComment(comment)
         ctml_writer._reactions[i].comment = comment
-        family = comment.split()[0]
+        ctml_writer._reactions[i].warned = warned
         ctml_writer._reactions[i].family = family
         families.add(family)
         #import pdb; pdb.set_trace()
@@ -468,6 +473,30 @@ def makeTableOfReactions(RMG_results, chemkin_formulae, smiless ):
     outfile.write(outstring)
     outfile.close()
 
+import re
+things_to_strip = re.compile('\W')
+warnings_to_highlight = re.compile('(Warning:.*?kcal\/mol)')
+#import pyparsing
+def processComment(comment):
+    """Make a comment string prettier and return it and the reaction family."""
+    family = comment.split()[0]
+    family = family.strip(':') # remove any trailing colons
+    family = things_to_strip.sub('_',family) #replace disallowed things with _
+
+    comment, warned = warnings_to_highlight.subn('<span class="warning">\g<1></class>',comment)
+    return comment, family, bool(warned)
+
+#    if (comment.find('Average')==-1):
+#        colon_location = comment.find(':')
+#        first_part = comment[0:colon_location+1]
+#    else:
+#        wrapped_comment = "(%s)"%comment
+#        pyparsing.ParserElement.setDefaultWhitespaceChars('') # don't split on whitespace
+#        parsed = pyparsing.nestedExpr().parseString(wrapped_comment).asList()[0]
+#        first_part = parsed[0]
+#        averaging = parsed[1]
+#        nodes = parsed[2]
+    
 def loadMixMaster(RMG_results):
     """Load MixMaster"""
     os.path.chdir(RMG_results)
