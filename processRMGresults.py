@@ -398,7 +398,7 @@ def makeTableOfReactions(RMG_results, chemkin_formulae, smiless ):
        {% for species in reaction._r %}
         {% if reaction._r[species]!=1 %}{{ reaction._r[species]|int }}{% endif %}
         <img src="pics/{{ species }}.png" class="speciesPic" alt="{{ species }}" title="{{ species }}">
-        <span class="species_formula">{{chemkin_formulae[species]}}</span>
+        <span class="species_formula">{{chemkin_formulae[species]}} {{ species }}</span>
         {% if not loop.last %} + {% endif %}
        {% endfor %}
       </td>
@@ -407,7 +407,7 @@ def makeTableOfReactions(RMG_results, chemkin_formulae, smiless ):
        {% for species in reaction._p %}
         {% if reaction._p[species]!=1 %}{{ reaction._p[species]|int  }}{% endif %}
         <img src="pics/{{ species }}.png" class="speciesPic" alt="{{ species }}" title="{{ species }}">
-        <span class="species_formula">{{chemkin_formulae[species]}}</span>
+        <span class="species_formula">{{chemkin_formulae[species]}} {{ species }}</span>
         {% if not loop.last %} + {% endif %}
        {% endfor %}
       </td>
