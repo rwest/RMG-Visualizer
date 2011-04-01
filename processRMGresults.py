@@ -1,5 +1,6 @@
 #! /usr/bin/python
 # this version updated by Richard West <rwest@mit.edu> in June 2010
+# Updated to convert SpeciesProfiles.txt to MixMaster data format by Connie Gao 4/1/2011
 """
 Postprocess a load of RMG Results
 """
@@ -149,6 +150,85 @@ def convertChemkin2Cantera(RMG_results):
         ck2cti.ck2cti(infile = infile, thermodb = thermodb,  trandb = trandb, idtag = nm, debug=0, validate=0)
     finally:
         os.chdir(starting_dir)
+        
+def convertSpeciesProfiles2MixMaster(RMG_results, temperature, pressure):
+    """Convert the SpeciesProfiles.txt from ODESolver folder into appropriate 
+    CSV data file for mixmaster.
+    
+    Needs a MolarMasses.txt file, which is created in another function.
+    Returns True if it suceeds, False if it fails."""
+    
+    # load file
+    filename ='ODESolver/SpeciesProfiles.txt'
+    filepath = os.path.join(RMG_results,filename)
+    outputfilepath = os.path.join(RMG_results,'ForMixMaster.csv')
+    
+    print "Converting mole fractions profile from '%s' into mass fractions profile in '%s'"%(filename, outputfilepath)
+    
+    try:
+        resultFile=file(filepath)
+    except IOError:
+        print "Couldn't open '%s'."%filepath
+        print "Will therefore not create mass fractions profile in '%s'"%outputfilepath
+        if os.path.exists(outputfilepath): 
+            print "In fact, I'm going to delete the old one for you, as it's out of date."
+            os.remove(outputfilepath)
+        return False
+    
+    massesfilename=os.path.join(RMG_results,'MolarMasses.txt')
+    print "Reading molar masses from",massesfilename
+    massesfile=file(massesfilename)
+    massesdict=dict()
+    for line in massesfile:
+        (species,mass)=line.split()
+        massesdict[species]=mass
+    massesfile.close()
+    
+    
+    # add "T \t P" to the  following line
+    titles=resultFile.next()
+    print "Species:",titles
+    output=titles.strip()+"\tT\tP\tnothing\n"
+    items=titles.split()
+    assert items[0]=='Time (s)'
+    speciesnames=items[1:]
+    masses=list()
+    for species in speciesnames:
+        masses.append(float(massesdict[species]))
+        
+    # add the temperature IN KELVIN and pressure IN PASCAL to all the following nonblank lines
+    line=resultFile.next()
+    
+    while (line.strip()):
+        massfractions=[]
+        massfractionsum = 0
+        items = line.split()
+        time = items[0]
+        molefracs = items[1:]
+        for i,molefrac in enumerate(molefracs):
+            massfrac = float(molefrac)*masses[i]
+            massfractions.append(massfrac)
+            massfractionsum += massfrac
+        massfractions = [str(m/massfractionsum) for m in massfractions]
+        output += str(time)+'\t'
+        output += '\t'.join(massfractions)
+        output +=  "\t%f\t%f\t0\n"%(temperature,pressure)
+        try:
+            line=resultFile.next()
+        except StopIteration:
+            break
+        
+        
+    # turn whitespaces into commas
+    # save the output
+    print outputfilepath
+    outputFile=file(outputfilepath,'w')
+    outputFile.write(output.replace('\t',','))
+    outputFile.close()
+    print "ForMixMaster.csv now contains mass fractions, as required by MixMaster"
+    return True
+    
+
 
 def convertFinalModel2MixMaster(RMG_results):
     """Convert the Final_Model.txt into appropriate CSV data file for mixmaster.
@@ -513,9 +593,11 @@ if __name__ == "__main__":
         print "Please specify an rmg results path"
     else:
         RMG_results = args[0]
+        temperature = input("Temperature in Kelvin: ")
+        pressure = input("Pressure in Pascal: ")
         
         print "Processing results in ",os.path.realpath(RMG_results)
         chemkin_formulae, smiless = drawMolecules(RMG_results)
         convertChemkin2Cantera(RMG_results)
         makeTableOfReactions(RMG_results, chemkin_formulae, smiless)
-        convertFinalModel2MixMaster(RMG_results)
+        convertSpeciesProfiles2MixMaster(RMG_results,temperature,pressure)
