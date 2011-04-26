@@ -11,6 +11,26 @@ package_path = os.path.join( os.path.split(os.path.realpath(__file__))[0],'pytho
 if os.path.exists(package_path):
     sys.path.insert(1,package_path) 
 
+
+re_f_float_neg = re.compile('(-?[0-9.]*)(-\d\d\d)')
+def fortran_float(input_string):
+    """
+    Return a float of the input string, just like `float(input_string)`,
+    but allowing for Fortran's string formatting to screw it up when 
+    you have very small numbers (like 0.31674-103 instead of 0.31674E-103 )
+    """
+    try:
+        fl = float(input_string)
+    except ValueError,e:
+        match = re_f_float_neg.match(input_string.strip())
+        if match:
+            processed_string = match.group(1)+'E'+match.group(2)
+            fl = float(processed_string)
+        else:
+            print "Trying to find number from ",input_string
+            raise e
+    return fl
+    
 def drawMolecules(RMG_results):
     """Draw pictures of each of the molecules in the RMG dictionary.
     
@@ -60,6 +80,7 @@ def drawMolecules(RMG_results):
         except StopIteration:
             print 'No more molecules'
             break
+        name = name.split()[0] # remove anything after the first space (eg. the InChI string)
         print '%-18s'%name ,
         graph=[]
         line=RMGfile.next().split('//')[0].strip() # remove comments
@@ -109,7 +130,7 @@ def drawMolecules(RMG_results):
             pymol.draw(filename=os.path.join(picfolder,name+'.png'), update=True, show=False)
             pymol.draw(filename=os.path.join(pdffolder,name+'.pdf'), update=False, show=False)
         except:
-            print "FAILED to draw picture of convert"+name
+            print "FAILED to draw picture or convert"+name
             
         pymol.write(format='mol',filename=os.path.join(molfolder,name+'.mol'),overwrite=True)
         
@@ -206,7 +227,7 @@ def convertSpeciesProfiles2MixMaster(RMG_results, temperature, pressure):
         time = items[0]
         molefracs = items[1:]
         for i,molefrac in enumerate(molefracs):
-            massfrac = float(molefrac)*masses[i]
+            massfrac = fortran_float(molefrac)*masses[i]
             massfractions.append(massfrac)
             massfractionsum += massfrac
         massfractions = [str(m/massfractionsum) for m in massfractions]
@@ -217,8 +238,7 @@ def convertSpeciesProfiles2MixMaster(RMG_results, temperature, pressure):
             line=resultFile.next()
         except StopIteration:
             break
-        
-        
+    
     # turn whitespaces into commas
     # save the output
     print outputfilepath
