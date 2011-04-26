@@ -60,6 +60,7 @@ def drawMolecules(RMG_results):
         except StopIteration:
             print 'No more molecules'
             break
+        name = name.split()[0] # remove anything after the first space (eg. the InChI string)
         print '%-18s'%name ,
         graph=[]
         line=RMGfile.next().split('//')[0].strip() # remove comments
@@ -109,7 +110,7 @@ def drawMolecules(RMG_results):
             pymol.draw(filename=os.path.join(picfolder,name+'.png'), update=True, show=False)
             pymol.draw(filename=os.path.join(pdffolder,name+'.pdf'), update=False, show=False)
         except:
-            print "FAILED to draw picture of convert"+name
+            print "FAILED to draw picture or convert"+name
             
         pymol.write(format='mol',filename=os.path.join(molfolder,name+'.mol'),overwrite=True)
         
