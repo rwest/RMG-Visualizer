@@ -190,7 +190,7 @@ def convertSpeciesProfiles2MixMaster(RMG_results, temperature, pressure):
     print "Species:",titles
     output=titles.strip()+"\tT\tP\tnothing\n"
     items=titles.split()
-    assert items[0]=='Time (s)'
+    assert items[0]=='Time(s)'
     speciesnames=items[1:]
     masses=list()
     for species in speciesnames:
@@ -593,8 +593,8 @@ if __name__ == "__main__":
         print "Please specify an rmg results path"
     else:
         RMG_results = args[0]
-        temperature = input("Temperature in Kelvin: ")
-        pressure = input("Pressure in Pascal: ")
+        temperature = 650 # K
+        pressure = 1067 # Pa
         
         print "Processing results in ",os.path.realpath(RMG_results)
         chemkin_formulae, smiless = drawMolecules(RMG_results)
