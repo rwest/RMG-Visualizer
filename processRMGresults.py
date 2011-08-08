@@ -9,8 +9,10 @@ import os, sys, shutil, re
 # use local modified versions of pybel and oasa
 package_path = os.path.join( os.path.split(os.path.realpath(__file__))[0],'python-packages' )
 if os.path.exists(package_path):
-    sys.path.insert(1,package_path) 
+    sys.path.insert(1,package_path)
 
+# Add RMG-Py
+sys.path.insert(1,os.path.abspath(os.path.join(os.path.split(os.path.realpath(__file__))[0],'..','RMG-Py')))
 
 re_f_float_neg = re.compile('(-?[0-9.]*)(-\d\d\d)')
 def fortran_float(input_string):
@@ -39,6 +41,9 @@ def drawMolecules(RMG_results):
     """
     import re
     import openbabel, pybel
+    
+    import rmgpy.molecule
+    import rmgpy.molecule_draw
     # please cite:
     # Pybel: a Python wrapper for the OpenBabel cheminformatics toolkit
     # Noel M O'Boyle, Chris Morley and Geoffrey R Hutchison
@@ -49,14 +54,18 @@ def drawMolecules(RMG_results):
     pdffolder=os.path.join(RMG_results,'pdfs')
     molfolder=os.path.join(RMG_results,'mols')
     
-    for path in [picfolder,molfolder,pdffolder]:
+    picfolder2=os.path.join(RMG_results,'pics2')
+    pdffolder2=os.path.join(RMG_results,'pdfs2')
+    
+    for path in [picfolder,molfolder,pdffolder,picfolder2,pdffolder2]:
         if os.path.isdir(path):
             print "Removing old contents of '%s'"%path
             for f in os.listdir(path):
                 os.remove(os.path.join(path,f))
         else:
             os.makedirs(path)
-    print "Making .mol files in '%s' and pictures in '%s' and pdfs in '%s'"%(molfolder,picfolder,pdffolder)
+    print "Using a modified Pybel & Oasa: Making .mol files in '%s' and pictures in '%s' and pdfs in '%s'"%(molfolder,picfolder,pdffolder)
+    print "Using RMG-Py: Making pictures in '%s' and pdfs in '%s'"%(picfolder2,pdffolder2)
     
     periodicTableByNumber={ 1: 'H',  2: 'He',  3: 'Li',  4: 'Be',  5: 'B',  6: 'C',  7: 'N',  8: 'O',  9: 'F',  10: 'Ne',  11: 'Na',  12: 'Mg',  13: 'Al',  14: 'Si',  15: 'P',  16: 'S',  17: 'Cl',  18: 'Ar',  19: 'K',  20: 'Ca',  21: 'Sc',  22: 'Ti',  23: 'V',  24: 'Cr',  25: 'Mn',  26: 'Fe',  27: 'Co',  28: 'Ni',  29: 'Cu',  30: 'Zn',  31: 'Ga',  32: 'Ge',  33: 'As',  34: 'Se',  35: 'Br',  36: 'Kr',  37: 'Rb',  38: 'Sr',  39: 'Y',  40: 'Zr',  41: 'Nb',  42: 'Mo',  43: 'Tc',  44: 'Ru',  45: 'Rh',  46: 'Pd',  47: 'Ag',  48: 'Cd',  49: 'In',  50: 'Sn',  51: 'Sb',  52: 'Te',  53: 'I',  54: 'Xe',  55: 'Cs',  56: 'Ba',  57: 'La',  58: 'Ce',  59: 'Pr',  60: 'Nd',  61: 'Pm',  62: 'Sm',  63: 'Eu',  64: 'Gd',  65: 'Tb',  66: 'Dy',  67: 'Ho',  68: 'Er',  69: 'Tm',  70: 'Yb',  71: 'Lu',  72: 'Hf',  73: 'Ta',  74: 'W',  75: 'Re',  76: 'Os',  77: 'Ir',  78: 'Pt',  79: 'Au',  80: 'Hg',  81: 'Tl',  82: 'Pb',  83: 'Bi',  84: 'Po',  85: 'At',  86: 'Rn',  87: 'Fr',  88: 'Ra',  89: 'Ac',  90: 'Th',  91: 'Pa',  92: 'U',  93: 'Np',  94: 'Pu',  95: 'Am',  96: 'Cm',  97: 'Bk',  98: 'Cf',  99: 'Es',  100: 'Fm',  101: 'Md',  102: 'No',  103: 'Lr',  104: 'Rf',  105: 'Db',  106: 'Sg',  107: 'Bh',  108: 'Hs',  109: 'Mt',  110: 'Ds',  111: 'Rg',  112: 'Uub',  113: 'Uut',  114: 'Uuq',  115: 'Uup',  116: 'Uuh',  117: 'Uus',  118: 'Uuo'}
     periodicTableBySymbol=dict([(val, key) for key, val in periodicTableByNumber.items()])   
@@ -88,7 +97,19 @@ def drawMolecules(RMG_results):
             graph.append(line)
             line=RMGfile.next().split('//')[0].strip() # remove comments
         # now have 'name' and 'graph'
-    
+        
+        
+        # Draw using RMG-Py
+        rmgmol = rmgpy.molecule.Molecule()
+        rmgmol.fromAdjacencyList('\n'.join(graph))
+        try:
+            rmgpy.molecule_draw.drawMolecule(rmgmol, os.path.join(picfolder2,name+'.png'))
+            rmgpy.molecule_draw.drawMolecule(rmgmol, os.path.join(pdffolder2,name+'.pdf'))
+        except:
+            print "FAILED to draw picture or convert %s using RMG-Py"%name
+            
+        # now convert using OpenBabel, Pybel, and Oasa
+        
         mol = openbabel.OBMol()
         re_bond=re.compile('\{(?P<atomnum>\d+),(?P<bondtype>[SDTB])\}')
         atoms_by_rmg_number = dict() # the atom numbers apparently don't have to be 1,2,3.. so we need a dictionary 
@@ -138,6 +159,21 @@ def drawMolecules(RMG_results):
 
         chemkin_formulae[name]=chemkinformula
         smiless[name] = smiles
+        
+        # Safety check: ensure the openbabel interpretation is the same as the RMG-Py interpretation
+        try:
+            mol2 = rmgmol.toOBMol()
+            assert mol2.GetFormula() == mol.GetFormula(), "Chemical formulae disagree: OBMol: {0} vs RMGpy: {1}.".format(mol.GetFormula(),mol2.GetFormula())
+          # This is buggy and gives false alerts. Sometimes the hydrogen addition is screwed up by open babel, but the picture was OK. Weird.
+          #  mol.AddHydrogens()
+          #  assert mol2.NumBonds() == mol.NumBonds(), "Number of bonds disagree: OBMol: {0} vs RMGpy: {1}.".format(mol.NumBonds(),mol2.NumBonds())
+        except AssertionError, e:
+            print "ERROR! "*10
+            print "Discrepancy between two methods of interpreting adjacency list"
+            print e.args[0]
+            print "Adjacency list:\n  " + '\n  '.join(graph)
+            print "From RMG-Py we get SMILES = %s" % rmgmol.toSMILES()
+            print "From this script via OBMol we get SMILES = %s" % pymol.write() 
     masses.close()
     RMGfile.close()
     return chemkin_formulae, smiless
